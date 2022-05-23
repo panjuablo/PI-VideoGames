@@ -1,5 +1,4 @@
 const axios = require('axios');
-const { Videogames, Gender, Platform } = require('../db');
 const { YOUR_API_KEY } = process.env;
 const api = `https://api.rawg.io/api/games?key=${ YOUR_API_KEY }`;
 
@@ -39,11 +38,8 @@ const getApi = async () => {
             image: e.background_image ? e.background_image : e.image,
         }
     });
-
-    const getDetails = async(id) => {
-
-    }
+    return apiFull;
 }
 
 
-module.exports = {}
+module.exports = { getApi }; 
