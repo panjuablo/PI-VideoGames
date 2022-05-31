@@ -1,45 +1,129 @@
 const axios = require('axios');
-const { YOUR_API_KEY } = process.env;
-const api = `https://api.rawg.io/api/games?key=${ YOUR_API_KEY }`;
+const { Videogame, Genres, Platform } = require('../db');
+const {Op} = require('sequelize');
+const {apiKey} = process.env;
+//const e = require('express');
+
 
 const getApi = async () => {
-    let apiPag1 = [],
-        apiPag2 = [],
-        apiPag3 = [],
-        apiPag4 = [],
-        apiPag5 = [],
-        apiPag6 = [];
-  
-    Promise.all([
-        (apiPag1 = await axios.get(api)),
-        (apiPag2 = await axios.get(`${api}&page=2`)),
-        (apiPag3 = await axios.get(`${api}&page=3`)),
-        (apiPag4 = await axios.get(`${api}&page=4`)),
-        (apiPag5 = await axios.get(`${api}&page=5`)),
-        (apiPag6 = await axios.get(`${api}&page=6`)),
-    ]);
-  
-    let apiRes = [
-        ...apiPag1.data.results,
-        ...apiPag2.data.results,
-        ...apiPag3.data.results,
-        ...apiPag4.data.results,
-        ...apiPag5.data.results,
-        ...apiPag6.data.results,
-    ];
+    try{
+        let api = `https://api.rawg.io/api/games?key=${apiKey}`;
+        let api_1 = (await axios.get(api)).data;
+        let pag_1 = await api_1.results;
+        let api_2 = (await axios.get(api_1.next)).data;
+        let pag_2 = await api_2.results;
+        let api_3 = (await axios.get(api_2.next)).data;
+        let pag_3 = await api_3.results;
+        let api_4 = (await axios.get(api_3.next)).data;
+        let pag_4 = await api_4.results;
+        let api_5 = (await axios.get(api_4.next)).data;
+        let pag_5 = await api_5.results;
 
-    const apiFull = apiRes.map( e => {
+        let pagTotal = [...pag_1, ...pag_2, ...pag_3, ...pag_4, ...pag_5];
+
+        let infoApi = await pagTotal.map((e) => {
+            return {
+                id: e.id,
+                name: e.name,
+                released: e.released,
+                rating: e.rating,
+                platforms: e.parent_platforms.map((e) => e.platform?.name ? e.platform.name : e),
+                image: e.background_image,
+                genres: e.genres.map((e) => e.name),
+            }
+        });
+
+        
+        let infoDb = await Videogame.findAll({
+            include: {
+                model: Genres,
+                attributes:['name'],
+                throwh: {attributes: []},
+            },
+            attributes: ['id','name','description','released','rating','platforms','image','createdInDb']
+        });
+        
+        const allInfo = await infoDb? [...infoApi, ...infoDb] : [...infoApi];
+    
+        return allInfo;
+
+    } catch (error) {
+        console.log(error);
+    };
+};
+
+const getName = async (name) => {
+    try {
+    const nameApi = (await axios.get(`https://api.rawg.io/api/games?key=${apiKey}&search=${name}&page_size=15`)).data.results;
+    const nameDb = await Videogame.findAll({
+        includes: Genres,
+        where: {
+            name: {[Op.iLike] : `%${name}%`}
+        },
+        attributes: ['id','name','description','released','rating','platforms','image','createdInDb']
+    });
+
+    const nameAll = nameDb ? [...nameDb, ...nameApi] : [...nameApi];
+
+    const nameMap = nameAll.map((e) => {
         return {
-            name: e.name,
             id: e.id,
+            name: e.name,
             released: e.released,
             rating: e.rating,
-            platforms: e.parent_platforms.map((e) => e.platform.name),
-            image: e.background_image ? e.background_image : e.image,
-        }
+            platforms: e.parent_platforms.map((e) => e.platform?.name ? e.platform.name : e),
+            image: e.background_image,
+            genres: e.genres.map((e) => e.name)
+        };
     });
-    return apiFull;
-}
+    
+    return nameMap;
+    
+    } catch (error) {
+        console.log(error);
+    };
+};
 
+const getId = async (id) => {
+    if (
+        id.match(
+            /^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}$/i //regular expression para validar UUID V4
+        )
+    ){ try {
+        let idDb = await Videogame.findAll({
+            where: {id},
+            include: [
+                {model: Genres,
+                attributes:['name'],
+                throgh: {attributes: []}},
+            ],
+            attributes: ['id','name','description','released','rating','platforms','image','createdInDb']
+        });
+        return idDb [0];
+    } catch (error) {           
+        console.log(error);
+    };
+    } else {
+         try {
+            const idApi = (await axios.get(`https://api.rawg.io/api/games/${id}?key=${apiKey}`)).data;
+            
+            const idMod = {
+                id: idApi.id,
+                name: idApi.name,
+                released: idApi.released,
+                rating: idApi.rating,
+                platforms: idApi.parent_platforms.map((e) => e.platform.name),
+                image: idApi.background_image,
+                genres: idApi.genres.map((e) => e.name),
+                description: idApi.description_raw,
+            };
+    
+            return idMod;
+            
+        } catch (error) {
+            console.log(error);
+        };  
+    };
+};
 
-module.exports = { getApi }; 
+module.exports = { getApi, getName, getId }; 
