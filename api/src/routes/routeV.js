@@ -1,4 +1,3 @@
-const { default: axios } = require('axios');
 const express = require('express');
 const route = express.Router();
 const { getApi, getName, getId } = require('../controls/controls')

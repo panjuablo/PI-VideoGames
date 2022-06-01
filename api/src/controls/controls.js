@@ -126,4 +126,25 @@ const getId = async (id) => {
     };
 };
 
-module.exports = { getApi, getName, getId }; 
+const postGame = async (req, res, next) => {
+    try {
+        const {id, name, released, rating, platforms, image, genres, description} = req.body;
+        const createdInDb = true;
+        const modGame = {id, name, released, rating, platforms, image, description};
+        const newGame = await Videogame.create(modGame)
+
+        for (let i of genres){
+            const matchGen = await Genres.findOne({
+                where: {
+                    name: i,
+                },
+            });
+            newGame.addGenres(matchGen);
+            res.status(200).send(newGame.id);
+        }
+    } catch (error) {
+        next(error);
+    };
+};
+
+module.exports = { getApi, getName, getId, postGame}; 
