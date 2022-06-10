@@ -1,0 +1,15 @@
+export const API_GAMES = 'http://localhost:3001/videogames';
+export const API_NAME = 'http://localhost:3001/videogames?name=';
+export const API_ID = 'http://localhost:3001/videogames/';
+export const API_POST = 'http://localhost:3001/videogame';
+export const API_GENRES = 'http://localhost:3001/genres';
+export const GET_GAMES = 'GET_GAMES';
+export const GET_DETAILS = 'GET_DETAILS';
+export const GET_GENRES = 'GET_GENRES';
+export const GAME_POST = 'GAME_POST';
+export const FILTER_GEN = 'FILTER_GEN';
+export const FILTER_CREATED = 'FILTER_CREATED';
+export const FILTER_SEARCH = 'FILTER_SEARCH';
+export const ORDER_ALPH = 'ORDER_ALPH';
+export const ORDER_RATING = 'ORDER_RATING';
+export const SET_DETAILS = 'SET_DETAILS';
