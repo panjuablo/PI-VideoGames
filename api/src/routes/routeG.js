@@ -7,8 +7,9 @@ const {apiKey} = process.env;
 route.get('/', async (req, res) => {
     try{
         const genresApi = (await axios.get(`https://api.rawg.io/api/genres?key=${apiKey}`)).data.results;
-
-        genresApi.map(async (e) => await Genres.findOrCreate({
+        const genApi = genresApi;
+        
+        genApi.map(async (e) => await Genres.findOrCreate({
             where: {
                 id: e.id,
                 name: e.name,

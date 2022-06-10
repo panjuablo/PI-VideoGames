@@ -2,7 +2,6 @@ const axios = require('axios');
 const { Videogame, Genres, Platform } = require('../db');
 const {Op} = require('sequelize');
 const {apiKey} = process.env;
-//const e = require('express');
 
 
 const getApi = async () => {
@@ -130,7 +129,7 @@ const postGame = async (req, res, next) => {
     try {
         const {id, name, released, rating, platforms, image, genres, description} = req.body;
         const createdInDb = true;
-        const modGame = {id, name, released, rating, platforms, image, description};
+        const modGame = {id, name, released, rating, platforms, image, description, createdInDb};
         const newGame = await Videogame.create(modGame)
 
         for (let i of genres){
